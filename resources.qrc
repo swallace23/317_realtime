@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>magnifying_glass.png</file>
+        <file>back.png</file>
+        <file>home.png</file>
+	<file>dashed_box.png</file>
+	<file>circle_arrow.png</file>
+    </qresource>
+</RCC>
