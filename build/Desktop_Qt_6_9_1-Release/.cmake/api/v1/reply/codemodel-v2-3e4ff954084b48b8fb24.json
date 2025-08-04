@@ -1,0 +1,79 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Release-82f3592cd2bebeaaa263.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "Release",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "realtime",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "realtime::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-realtime-Release-c010bd8246b5ca48edc6.json",
+					"name" : "realtime",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "realtime_autogen::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-realtime_autogen-Release-9f43dbcdfd990ce0e273.json",
+					"name" : "realtime_autogen",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "realtime_autogen_timestamp_deps::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-realtime_autogen_timestamp_deps-Release-7101cb9f8e1dd392c9a4.json",
+					"name" : "realtime_autogen_timestamp_deps",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/sean-wallace/Documents/realtime/realtime/build/Desktop_Qt_6_9_1-Release",
+		"source" : "/home/sean-wallace/Documents/realtime/realtime"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

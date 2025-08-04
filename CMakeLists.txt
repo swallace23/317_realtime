@@ -34,9 +34,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         plotwindow.h plotwindow.cpp
         mycustomplot.h
         resources.qrc
-
-
     )
+  if(APPLE)
+    set_target_properties(tst_manual_ios_assets PROPERTIES MACOSX_BUNDLE TRUE)
+  endif()
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET realtime APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
