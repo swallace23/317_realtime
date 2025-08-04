@@ -1445,10 +1445,22 @@ void MainWindow::plot_imu_mag(QCPAxisRect* axis_rect){
         mag_data_x[i] = (mag_data_x[i]*m_scale)/mag_data[i];
         mag_data_y[i] = (mag_data_y[i]*m_scale)/mag_data[i];
         mag_data_z[i] = (mag_data_z[i]*m_scale)/mag_data[i];
-        double norm = std::max(gyr_data[i],epsilon);
-        gyr_data_x[i] = (gyr_data_x[i]*g_scale)/norm;
-        gyr_data_y[i] = (gyr_data_y[i]*g_scale)/norm;
-        gyr_data_z[i] = (gyr_data_z[i]*g_scale)/norm;
+        gyr_data_x[i] = (gyr_data_x[i]*g_scale);
+        gyr_data_y[i] = (gyr_data_y[i]*g_scale);
+        gyr_data_z[i] = (gyr_data_z[i]*g_scale);
+
+        // double norm = std::max(gyr_data[i],epsilon);
+    //     if (gyr_data[i]<epsilon){
+    //             gyr_data_x[i]=0;
+    //             gyr_data_y[i]=0;
+    //             gyr_data_z[i]=0;
+    //         }
+    //     else{
+    //         gyr_data_x[i] = (gyr_data_x[i]*g_scale)/gyr_data[i];
+    //         gyr_data_y[i] = (gyr_data_y[i]*g_scale)/gyr_data[i];
+    //         gyr_data_z[i] = (gyr_data_z[i]*g_scale)/gyr_data[i];
+
+    //         }
 
 
     }
@@ -1461,6 +1473,8 @@ void MainWindow::plot_imu_mag(QCPAxisRect* axis_rect){
     QCPAxis *xAxis = axis_rect->axis(QCPAxis::atBottom);
     QCPAxis *yAxis = axis_rect->axis(QCPAxis::atLeft);
     QStringList types = {"ACC", "MAG", "GYR"};
+    // QStringList types = {"ACC", "MAG"};
+
     QVector<QVector<double>> data_x = {acc_data_x, mag_data_x, gyr_data_x};
     QVector<QVector<double>> data_y = {acc_data_y, mag_data_y, gyr_data_y};
     QVector<QVector<double>> data_z = {acc_data_z, mag_data_z, gyr_data_z};
