@@ -8,8 +8,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets StateMachine PrintSupport SerialPort)
+find_package(Qt6 REQUIRED COMPONENTS Widgets StateMachine PrintSupport SerialPort)
 
 set(PROJECT_SOURCES
     main.cpp
@@ -51,12 +50,13 @@ if(APPLE)
         MACOSX_BUNDLE_SHORT_VERSION_STRING "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}"
         MACOSX_BUNDLE_GUI_IDENTIFIER "com.yourdomain.realtime"
     )
-endif()
 
 # Windows-specific (keep if you want Windows builds)
-set_target_properties(realtime PROPERTIES
-    WIN32_EXECUTABLE TRUE
-)
+elseif(WINDOWS)
+    set_target_properties(realtime PROPERTIES
+        WIN32_EXECUTABLE TRUE
+    )
+endif()
 
 include(GNUInstallDirs)
 install(TARGETS realtime
