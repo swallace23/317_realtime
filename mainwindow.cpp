@@ -71,21 +71,22 @@ MainWindow::MainWindow(QWidget *parent)
         QList<QString> port_names;
         for(int i=0;i<ports.size();i++){
             QString name = ports[i].portName();
-//filter for serial ports
-        #ifdef Q_OS_LINUX
-                if(name.startsWith("ttyUSB") || name.startsWith("ttyACM")){
-                    port_names.append(name);
-                }
-            }
-        #elif defined(Q_OS_WIN)
-                if(name.startsWith("COM")){
-                    port_names.append(name);
-                }
-        #elif defined(Q_OS_MAC)
-                if(name.contains("usbmodem")||name.contains("usbserial")){
-                    port_names.append(name);
-                }
-        #endif
+
+// filter for serial ports
+#ifdef Q_OS_LINUX
+        if(name.startsWith("ttyUSB") || name.startsWith("ttyACM")){
+            port_names.append(name);
+        }
+#elif defined(Q_OS_WIN)
+        if(name.startsWith("COM")){
+            port_names.append(name);
+        }
+#elif defined(Q_OS_MAC)
+        if(name.contains("usbmodem")||name.contains("usbserial")){
+            port_names.append(name);
+        }
+#endif
+    }  // <<<<<< moved here
 
         port_entry->insertItems(0,port_names);
 
@@ -1435,7 +1436,7 @@ void MainWindow::plot_imu_mag(QCPAxisRect* axis_rect){
 
 
     int norm_len = std::min(acc_data_x.size(),acc_data.size());
-    constexpr double epsilon = 1e-4;
+    constexpr double epsilon = 1e-3;
 
     for (int i=0; i<norm_len;i++){
         acc_data_x[i] = (acc_data_x[i]*a_scale)/acc_data[i];
