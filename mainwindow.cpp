@@ -78,7 +78,7 @@ MainWindow::MainWindow(QWidget *parent)
             port_names.append(name);
         }
 #elif defined(Q_OS_WIN)
-        if(name.startsWith("COM")){
+        if(name.contains("COM")){
             port_names.append(name);
         }
 #elif defined(Q_OS_MAC)
