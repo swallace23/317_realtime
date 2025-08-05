@@ -341,6 +341,18 @@ void MainWindow::startPlots(QWidget *, QVBoxLayout *){
             plot_static_chamber(layout);
         }
     } else{
+        QString s_datetime = QDateTime::currentDateTime(QTimeZone::systemTimeZone()).toString("yyyy-MM-dd_hh-mm-ss");
+        QString exeDir = QCoreApplication::applicationDirPath();
+        QString writepath = QDir(exeDir).filePath(s_datetime + "_data.bin");
+        writefile.setFileName(writepath);
+
+        if (!writefile.open(QIODevice::WriteOnly | QIODevice::Append)) {
+            qWarning() << "Failed to open data file for append:" << writefile.errorString();
+            // handle error (disable saving, alert user, etc.)
+        } else {
+            qDebug() << "Writing serial data to" << writefile.fileName();
+        }
+
         if(params.plot_choice==0){
             plot_dynamic(layout);
         } else{
@@ -587,6 +599,7 @@ void MainWindow::plot_dynamic(QVBoxLayout* layout){
 }
 
 void MainWindow::start_dynamic_chamber(QVBoxLayout* layout){
+
     // ============================================== set up header ==============================================
     QHBoxLayout *header = new QHBoxLayout;
     QWidget *header_container = new QWidget;
@@ -822,14 +835,23 @@ void MainWindow::read_serial(QSerialPort* serial){
     timer->stop();
     serial_bytes->append(serial->readAll());
     parse(false);
-    if(params.plot_choice==0){
-        QTimer::singleShot(100, this, [=]() { update_dynamic(); serial_bytes->clear(); timer->start(222);});
-    } else{
-        QTimer::singleShot(100, this, [=]() { update_dynamic(true); serial_bytes->clear(); timer->start(1000);});
+    QMutexLocker locker(&fileMutex);
+    if (writefile.isOpen()) {
+        qint64 written = writefile.write(*serial_bytes);     // writes raw bytes
+        if (written == -1) {
+            qWarning() << "Failed to write to file:" << writefile.errorString();
+        } else if (written != serial_bytes->size()) {
+            qWarning() << "Partial write to file:" << written << "of" << serial_bytes->size();
+        }
     }
-    // update_dynamic();
-    // serial_bytes->clear();
-    // timer->start(222);
+
+    if(params.plot_choice==0){
+        QTimer::singleShot(100, this, [=]() { update_dynamic();
+        serial_bytes->clear(); timer->start(1000);});
+    } else{
+        QTimer::singleShot(100, this, [=]() { update_dynamic(true);
+        serial_bytes->clear(); timer->start(1000);});
+    }
 
 }
 

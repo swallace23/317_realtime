@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QtMath>
 #include <QMutex>
+#include <QDateTime>
 
 struct WelcomeEntries{
     QLineEdit *file;
@@ -101,7 +102,8 @@ private:
 
     void parse(bool is_static);
     void save_settings();
-
+    QFile writefile;
+    QMutex fileMutex;
     QList<MyCustomPlot*> plots;
     MyCustomPlot* pip_plots;
     MyCustomPlot* background_plot;
