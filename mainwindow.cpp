@@ -362,18 +362,81 @@ void MainWindow::startPlots(QWidget *, QVBoxLayout *){
 }
 
 void MainWindow::plot_static_chamber(QVBoxLayout* layout){
+    // ensure central widget exists
+    if (!this->centralWidget()) {
+        QWidget *c = new QWidget;
+        setCentralWidget(c);
+    }
+
+    // If layout isn't the central widget's layout, install it.
+    // This is safe if you expect layout to be the visible layout.
+    if (this->centralWidget()->layout() != layout) {
+        this->centralWidget()->setLayout(layout);
+        qDebug() << "Installed layout on centralWidget()";
+    }
+
     parse(true);
     // ============================================== set up header ==============================================
     QHBoxLayout *header = new QHBoxLayout;
     QWidget *header_container = new QWidget;
     header_container->setLayout(header);
-    header_container->setStyleSheet("background-color:white;");
+    header_container->setStyleSheet("background-color:black;");
     QString page_title = "Shield ";
     page_title.append(QString::number(s_data.shield_id));
     QLabel *title = new QLabel(page_title);
-    title->setStyleSheet("QLabel{background-color:white;color:black;font:30pt;}");
+    title->setStyleSheet("QLabel{background-color:black;color:white;font:30pt;}");
     title->setAlignment(Qt::AlignCenter);
     header->addWidget(title);
+
+    QHBoxLayout *lock_box = new QHBoxLayout;
+    QCheckBox *lock_axes = new QCheckBox();
+    lock_axes->setStyleSheet("QCheckBox{background-color : cyan;}");
+    QLabel *lock_axes_label = new QLabel("Lock axes?");
+
+    QPushButton *reset = new QPushButton();
+    connect(reset, &QPushButton::clicked, this, [=]() {
+        for (int i=0; i<rects.size();i++) {
+            QCPAxis* xAxis = rects[i]->axis(QCPAxis::atBottom);
+            if (!xAxis) continue;
+
+            xAxis->rescale(true);
+            xAxis->setRange(default_range);
+        }
+        background_plot->replot();
+    });
+
+    reset->setIcon(QIcon(":/home.png"));
+    reset->setIconSize(QSize(30,30));
+    reset->setFixedSize(34,34);
+    QPushButton *zoom = new QPushButton();
+    zoom->setCheckable(true);
+    zoom->setIcon(QIcon(":/dashed_box.png"));
+    zoom->setIconSize(QSize(24,24));
+    zoom->setFixedSize(QSize(30,30));
+    zoom->setStyleSheet(R"(
+        QPushButton{background-color:white;border:1px solid black;}
+        QPushButton::checked{background-color: #d0d0d0;border:1px inset black;}
+    )");
+    connect(zoom, &QPushButton::clicked, this, [=](){
+        toggle_zoom(zoom);
+    });
+    header->addWidget(reset);
+    header->addWidget(zoom);
+    header->addStretch();
+    header->addWidget(title);
+    header->addStretch();
+    lock_box->addWidget(lock_axes_label);
+    lock_box->addWidget(lock_axes);
+    header->addLayout(lock_box);
+    lock_axes->click();
+
+    connect(lock_axes, &QCheckBox::checkStateChanged, this, [=](){
+        if(lock_axes->checkState()){
+            sync_plots();
+        }else{
+            unsync_plots();
+        }
+    });
 
     // ============================================== set up plot ==============================================
     //for setting up axes - see https://www.qcustomplot.com/index.php/demos/colormapdemo
@@ -385,13 +448,15 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     cplot.map_0_rect = new QCPAxisRect(background_plot);
     cplot.map_1_rect = new QCPAxisRect(background_plot);
     cplot.imu_rect = new QCPAxisRect(background_plot);
+    // cplot.map_0_rect->axes()->axisRect()->
     background_plot->plotLayout()->clear();
     background_plot->plotLayout()->addElement(0,0,cplot.map_0_rect);
     background_plot->plotLayout()->addElement(1,0,cplot.map_1_rect);
     background_plot->plotLayout()->addElement(2,0,cplot.imu_rect);
     cplot.color_map = new QCPColorMap(cplot.map_0_rect->axis(QCPAxis::atBottom),cplot.map_0_rect->axis(QCPAxis::atLeft));
     cplot.color_map_1 = new QCPColorMap(cplot.map_1_rect->axis(QCPAxis::atBottom),cplot.map_1_rect->axis(QCPAxis::atLeft));
-
+    rects = {cplot.map_0_rect, cplot.map_1_rect, cplot.imu_rect};
+    rects_b={};
     int nx = s_data.sweep_ts.size();
     int ny = 28;
     cplot.color_map->data()->setSize(nx,ny);
@@ -498,7 +563,7 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     cplot.map_1_rect->axis(QCPAxis::atLeft)->setLabel("Sweep Index (PIP1)");
 
     plot_imu_mag(cplot.imu_rect);
-    background_plot->replot();
+
     cplot.color_map->rescaleDataRange();
     cplot.color_map_1->rescaleDataRange();
 
@@ -508,6 +573,21 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     // ============================================== set up layout ==============================================
     layout->addWidget(header_container,1);
     layout->addWidget(background_plot,10);
+    header_container->show();
+    background_plot->show();
+
+    // give the layout a hint and force a relayout/paint
+    header_container->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    background_plot->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    background_plot->setMinimumHeight(300);
+    background_plot->setMinimumWidth(600);
+
+
+    this->centralWidget()->update();
+    this->centralWidget()->adjustSize();   // recompute sizes
+    this->adjustSize();                    // main window adjust
+    background_plot->replot();
+
 
 }
 void MainWindow::plot_dynamic(QVBoxLayout* layout){
@@ -1072,59 +1152,6 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     default_range_b = s1_rect_b->axis(QCPAxis::atBottom)->range();
 
 
-
-
-    // QVBoxLayout *left_box = new QVBoxLayout;
-    // QVBoxLayout *plots_box = new QVBoxLayout;
-    // QLabel *unbuf_label = new QLabel("Unbuffered");
-    // unbuf_label->setStyleSheet("QLabel{background-color:white;color:black;font:15pt;}");
-    // unbuf_label->setAlignment(Qt::AlignCenter);
-    // unbuf_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    // left_box->addWidget(unbuf_label);
-
-    // // plot s1
-    // QHBoxLayout *sweep0_box = new QHBoxLayout;
-    // MyCustomPlot *sweep_plot_0 = new MyCustomPlot();
-    // plot_sweep(sweep_plot_0, '0');
-    // QPushButton *zoom_sweep0 = new QPushButton();
-    // connect(zoom_sweep0, &QPushButton::clicked, this, [=](){
-    // });
-
-    // sweep_plot_0->setStyleSheet("border: 1px solid red");
-    // zoom_sweep0->setIcon(QIcon(":/magnifying_glass.png"));
-    // zoom_sweep0->setIconSize(QSize(24, 24));
-    // zoom_sweep0->setFixedSize(30, 30);
-    // sweep0_box->addWidget(sweep_plot_0,9);
-    // sweep0_box->addWidget(zoom_sweep0,1);
-    // plots_box->addLayout(sweep0_box);
-
-    // // set up zoom buttons
-    // QButtonGroup *zoom_buttons = new QButtonGroup;
-    // zoom_buttons->addButton(zoom_sweep0,0); zoom_buttons->addButton(zoom_sweep1,1); zoom_buttons->addButton(zoom_acc,2); zoom_buttons->addButton(zoom_mag,3); zoom_buttons->addButton(zoom_gyr,4);
-    // for(int i=0;i<plots.size();i++){
-    //     connect(zoom_buttons->button(i),&QPushButton::clicked,this,[=](){
-    //         PlotWindow *plot_window;
-    //         if(i<=1){
-    //             plot_window = new PlotWindow(nullptr, plots[i], this, true);
-    //         } else{
-    //             plot_window = new PlotWindow(nullptr, plots[i],this,false);
-    //         }
-    //         plot_window->setAttribute(Qt::WA_DeleteOnClose);
-    //         plot_window->resize(800,600);
-    //         plot_window->show();
-    //         //unlock from other plots to improve performance
-    //         if(lock_axes->isChecked()){
-    //             lock_axes->click();
-    //         }
-    //         this->hide();
-
-    //     });
-
-    // }
-
-
-
-
 }
 void MainWindow::sync_plots(){
     // Get all axis rects
@@ -1148,25 +1175,28 @@ void MainWindow::sync_plots(){
             });
         }
     }
-    for (int i = 0; i < rects_b.size(); i++) {
-        QCPAxis* sourceAxis = rects_b[i]->axis(QCPAxis::atBottom);  // example: xAxis bottom
-        if (!sourceAxis) continue;
+    if(rects_b.size()!=0){
+        for (int i = 0; i < rects_b.size(); i++) {
+            QCPAxis* sourceAxis = rects_b[i]->axis(QCPAxis::atBottom);  // example: xAxis bottom
+            if (!sourceAxis) continue;
 
-        for (int j = 0; j < rects_b.size(); j++) {
-            if (i == j) continue;
+            for (int j = 0; j < rects_b.size(); j++) {
+                if (i == j) continue;
 
-            QCPAxis* targetAxis = rects_b[j]->axis(QCPAxis::atBottom);
-            if (!targetAxis) continue;
+                QCPAxis* targetAxis = rects_b[j]->axis(QCPAxis::atBottom);
+                if (!targetAxis) continue;
 
-            connect(sourceAxis,
-                    static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
-                    targetAxis,
-                    static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+                connect(sourceAxis,
+                        static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+                        targetAxis,
+                        static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
 
-            connect(sourceAxis->parentPlot(), &QCustomPlot::afterReplot, targetAxis->parentPlot(), [=](){
-                targetAxis->parentPlot()->replot();
-            });
+                connect(sourceAxis->parentPlot(), &QCustomPlot::afterReplot, targetAxis->parentPlot(), [=](){
+                    targetAxis->parentPlot()->replot();
+                });
+            }
         }
+
     }
 
 }
@@ -1329,10 +1359,20 @@ void MainWindow::parse(bool is_static){
 
 void MainWindow::toggle_zoom(QAbstractButton *check){
     bool checked = check->isChecked();
-    if(checked){
+    if(rects.size()>4){
+        if(checked){
             pip_plots->setSelectionRectMode(QCP::srmZoom);
-    }else{
+        }else{
             pip_plots->setSelectionRectMode(QCP::srmNone);
+
+        }
+    } else{
+        if(checked){
+            background_plot->setSelectionRectMode(QCP::srmZoom);
+        }else{
+            background_plot->setSelectionRectMode(QCP::srmNone);
+
+        }
 
     }
 }
