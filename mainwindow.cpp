@@ -202,11 +202,25 @@ MainWindow::MainWindow(QWidget *parent)
             } else if (checked==1){
                 params.is_static=false;
             }
-            if(flight_button->isChecked() || dynamic_flight_button->isChecked()){
-                params.plot_choice=0;
+            if(static_plot->isChecked()){
+                if(flight_button->isChecked()){
+                    params.plot_choice=0;
+                } else{
+                    params.plot_choice=1;
+                }
             } else{
-                params.plot_choice=1;
+                if(dynamic_flight_button->isChecked()){
+                    params.plot_choice=0;
+                } else{
+                    params.plot_choice=1;
+                }
+
             }
+            // if(flight_button->isChecked() || dynamic_flight_button->isChecked()){
+            //     params.plot_choice=0;
+            // } else{
+            //     params.plot_choice=1;
+            // }
             if(params.save){
                 save_settings();
             }
