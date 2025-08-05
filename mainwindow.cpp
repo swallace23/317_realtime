@@ -152,6 +152,10 @@ MainWindow::MainWindow(QWidget *parent)
         } else{
             dynamic_flight_button->click();
         }
+        QButtonGroup *plot_choice_group_dynamic = new QButtonGroup;
+        plot_choice_group_dynamic->setExclusive(true);
+        plot_choice_group_dynamic->addButton(dynamic_flight_button);
+        plot_choice_group_dynamic->addButton(dynamic_chamber_button);
 
         dynamic_box->addWidget(dynamic_plot);
         dynamic_box->addLayout(dynamic_plot_choice_box);
