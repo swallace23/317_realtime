@@ -27,8 +27,16 @@ struct UserParams{
     bool save;
     bool is_static;
     quint8 plot_choice;
-    UserParams(QString f = "", QString p = "", int b = 230400, bool s = false, bool i = true, quint8 pl = 0)
-        : filename(f), port(p), baud(b), save(s), is_static(i), plot_choice(pl) {}
+    float p0_min;
+    float p0_max;
+    float p1_min;
+    float p1_max;
+    float p0_t_min;
+    float p0_t_max;
+    float p1_t_min;
+    float p1_t_max;
+    UserParams(QString f = "", QString p = "", int b = 230400, bool s = false, bool i = true, quint8 pl = 0, float p0min=0,float p0max=5,float p1min=0, float p1max=5, float p0tmin = 0, float p0tmax = 1000, float p1tmin = 0,float p1tmax=1000)
+        : filename(f), port(p), baud(b), save(s), is_static(i), plot_choice(pl), p0_min(p0min), p0_max(p0max), p1_min(p1min), p1_max(p1max), p0_t_min(p0tmin), p0_t_max(p0tmax), p1_t_min(p1tmax), p1_t_max(p1tmax) {}
 
 };
 
@@ -57,7 +65,16 @@ struct ChamberPlot{
     QCPColorMap *color_map_1;
     QCPAxisRect *map_0_rect;
     QCPAxisRect *map_1_rect;
-    QCPAxisRect *imu_rect;
+    QCPAxisRect *acc_rect;
+    QCPAxisRect *gyr_rect;
+    QCPAxisRect *iv_rect;
+    QCPAxisRect *iv1_rect;
+    QCPRange map_range;
+    QCPRange map_1_range;
+    QCPRange acc_range;
+    QCPRange gyr_range;
+    QCPRange iv_range;
+    QCPRange iv1_range;
 };
 
 // 2D color plot - x axis is time, y axis is sweep step, color is pip value. not useful for realtime but useful for static  with actual data.
@@ -108,6 +125,9 @@ private:
     MyCustomPlot* pip_plots;
     MyCustomPlot* background_plot;
     QVector<QVector<double>> get_imu_data(quint8 imu_id);
+    QList<QCPGraph*> imu_graphs;
+    void toggle_imu_graphs(int idx);
+
 
     void sync_plots();
     void unsync_plots();
