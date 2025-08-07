@@ -178,6 +178,26 @@ MainWindow::MainWindow(QWidget *parent)
         p1_t_box->addWidget(p1_t_max_label);
         p1_t_box->addWidget(p1_t_max);
 
+        //disable user range choices for now
+        p0_min->setVisible(false);
+        p1_min->setVisible(false);
+        p0_max->setVisible(false);
+        p1_max->setVisible(false);
+        p0_t_min->setVisible(false);
+        p1_t_min->setVisible(false);
+        p0_t_max->setVisible(false);
+
+        p1_t_max->setVisible(false);
+        p0_min_label->setVisible(false);
+        p0_max_label->setVisible(false);
+        p1_min_label->setVisible(false);
+        p1_max_label->setVisible(false);
+        p0_t_min_label->setVisible(false);
+        p0_t_max_label->setVisible(false);
+        p1_t_min_label->setVisible(false);
+        p1_t_max_label->setVisible(false);
+
+
 
 
         static_box->addWidget(static_plot);
@@ -454,6 +474,50 @@ void MainWindow::toggle_imu_graphs(int idx){
 
 }
 
+void MainWindow::set_color_data(){
+    double x, y, z, z1;
+    int nx = s_data.sweep_ts.size();
+    int ny = 28;
+    cplot.color_map->data()->setSize(nx,ny);
+    cplot.color_map_1->data()->setSize(nx,ny);
+    quint32 t0 = s_data.sweep_ts.first()*t_scale;
+    quint32 t1 = s_data.sweep_ts.last()*t_scale;
+    cplot.color_map->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
+    cplot.color_map_1->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
+
+    for (int xIndex=0; xIndex<nx; ++xIndex)
+    {
+        for (int yIndex=0; yIndex<ny; ++yIndex)
+        {
+            cplot.color_map->data()->cellToCoord(xIndex, yIndex, &x, &y);
+            z = s_data.sweep0[xIndex*ny + (ny-1-yIndex)]*p_scale;
+            cplot.color_map->data()->setCell(xIndex, yIndex, z);
+            cplot.color_map_1->data()->cellToCoord(xIndex, yIndex, &x, &y);
+            z1 = s_data.sweep1[xIndex*ny+(ny-1-yIndex)]*p_scale;
+            cplot.color_map_1->data()->setCell(xIndex, yIndex, z1);
+
+        }
+    }
+    cplot.color_map->rescaleDataRange(true);
+    cplot.color_map_1->rescaleDataRange(true);
+
+}
+
+void MainWindow::toggle_flux_voltage(int pip_num, QList<unsigned short>& data){
+    double gain;
+    pip_num==0 ? gain = p0_gain : gain = p1_gain;
+    if(is_voltage){
+        for(int i=0;i<data.size();i++){
+            data[i] = (data[i]-v_offset)/gain;
+        }
+    } else{
+        for(int i =0;i<data.size();i++){
+            data[i] = (data[i]*gain)+v_offset;
+        }
+    }
+}
+
+
 void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     // ensure central widget exists
     if (!this->centralWidget()) {
@@ -521,8 +585,46 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     connect(zoom, &QPushButton::clicked, this, [=](){
         toggle_zoom(zoom);
     });
+    //declaring this here so it doesn't have to be global
+    background_plot = new MyCustomPlot;
+    QCPColorScale *color_scale = new QCPColorScale(background_plot);
+    QCPColorScale *color_scale_1 = new QCPColorScale(background_plot);
+    cplot.map_0_rect = new QCPAxisRect(background_plot);
+    cplot.map_1_rect = new QCPAxisRect(background_plot);
+    cplot.acc_rect = new QCPAxisRect(background_plot);
+    cplot.gyr_rect = new QCPAxisRect(background_plot);
+    cplot.iv_rect = new QCPAxisRect(background_plot);
+    cplot.iv1_rect = new QCPAxisRect(background_plot);
+
+    cplot.color_map = new QCPColorMap(cplot.map_0_rect->axis(QCPAxis::atBottom),cplot.map_0_rect->axis(QCPAxis::atLeft));
+    cplot.color_map_1 = new QCPColorMap(cplot.map_1_rect->axis(QCPAxis::atBottom),cplot.map_1_rect->axis(QCPAxis::atLeft));
+
+
+    QPushButton *toggle_data = new QPushButton("Toggle Data Type");
+    connect(toggle_data, &QPushButton::clicked, this, [=](){
+        cplot.color_map->setColorScale(color_scale);
+        cplot.color_map_1->setColorScale(color_scale_1);
+        toggle_flux_voltage(0,s_data.sweep0);
+        toggle_flux_voltage(1,s_data.sweep1);
+        set_color_data();
+        if(is_voltage){
+            color_scale->setLabel("PIP 0 Flux (nA/mV)");
+            color_scale_1->setLabel("PIP 1 Flux (nA/mV)");
+        } else{
+            color_scale->setLabel("PIP 0 Voltage (V)");
+            color_scale_1->setLabel("PIP 1 Voltage (V)");
+        }
+        is_voltage = !is_voltage;
+        // color_scale->setType(QCPAxis::atRight);
+        // color_scale->rescaleDataRange(true);
+        // color_scale_1->rescaleDataRange(true);
+        background_plot->replot();
+
+
+    });
     header->addWidget(reset);
     header->addWidget(zoom);
+    header->addWidget(toggle_data);
     header->addStretch();
     header->addWidget(title);
     header->addStretch();
@@ -541,7 +643,6 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
 
     // ============================================== set up plot ==============================================
     //for setting up axes - see https://www.qcustomplot.com/index.php/demos/colormapdemo
-    background_plot = new MyCustomPlot;
     background_plot->plotLayout()->clear();
     QCPLayoutGrid *plot_layout = background_plot->plotLayout();
     QCPLayoutGrid *left_col  = new QCPLayoutGrid;
@@ -584,12 +685,6 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
 
     background_plot->setInteractions(QCP::iRangeDrag|QCP::iRangeZoom);
     // background_plot->axisRect()->setupFullAxesBox(true);
-    cplot.map_0_rect = new QCPAxisRect(background_plot);
-    cplot.map_1_rect = new QCPAxisRect(background_plot);
-    cplot.acc_rect = new QCPAxisRect(background_plot);
-    cplot.gyr_rect = new QCPAxisRect(background_plot);
-    cplot.iv_rect = new QCPAxisRect(background_plot);
-    cplot.iv1_rect = new QCPAxisRect(background_plot);
 
 
     left_col->addElement(0, 0, cplot.map_0_rect);
@@ -621,40 +716,10 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     cplot.map_0_rect->axis(QCPAxis::atLeft)->setLabel("Sweep Index");
     cplot.map_1_rect->axis(QCPAxis::atLeft)->setLabel("Sweep Index");
 
-    cplot.color_map = new QCPColorMap(cplot.map_0_rect->axis(QCPAxis::atBottom),cplot.map_0_rect->axis(QCPAxis::atLeft));
-    cplot.color_map_1 = new QCPColorMap(cplot.map_1_rect->axis(QCPAxis::atBottom),cplot.map_1_rect->axis(QCPAxis::atLeft));
     rects = {cplot.map_0_rect, cplot.map_1_rect, cplot.acc_rect, cplot.gyr_rect, cplot.iv_rect};
     rects_b={};
-    int nx = s_data.sweep_ts.size();
-    int ny = 28;
-    cplot.color_map->data()->setSize(nx,ny);
-    cplot.color_map_1->data()->setSize(nx,ny);
-    quint32 t0 = s_data.sweep_ts.first()*t_scale;
-    quint32 t1 = s_data.sweep_ts.last()*t_scale;
-    cplot.color_map->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
-    cplot.color_map_1->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
-    double x, y, z, z1;
-    double z_min=0, z_max=0, z_min_1=0, z_max_1=0;
-    //removing nA scaling for now
-    double pip0_min = params.p0_min;
-    double pip0_max = params.p0_max;
-    double pip1_min = params.p0_min;
-    double pip1_max = params.p0_max;
-    for (int xIndex=0; xIndex<nx; ++xIndex)
-    {
-        for (int yIndex=0; yIndex<ny; ++yIndex)
-        {
-            cplot.color_map->data()->cellToCoord(xIndex, yIndex, &x, &y);
-            z = s_data.sweep0[xIndex*ny + (ny-1-yIndex)]*p_scale;
-            cplot.color_map->data()->setCell(xIndex, yIndex, z);
-            cplot.color_map_1->data()->cellToCoord(xIndex, yIndex, &x, &y);
-            z1 = s_data.sweep1[xIndex*ny+(ny-1-yIndex)]*p_scale;
-            cplot.color_map_1->data()->setCell(xIndex, yIndex, z1);
-    }
-}
 
-    QCPColorScale *color_scale = new QCPColorScale(background_plot);
-    QCPColorScale *color_scale_1 = new QCPColorScale(background_plot);
+    set_color_data();
     left_col->addElement(0,1,color_scale);
     left_col->addElement(1,1,color_scale_1);
 
@@ -663,8 +728,10 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     cplot.color_map_1->setColorScale(color_scale_1);
     color_scale->axis()->setLabel("PIP0 Voltage (V)");
     color_scale_1->axis()->setLabel("PIP1 Voltage (V)");
-    cplot.color_map->setDataRange(QCPRange(pip0_min,pip0_max));
-    cplot.color_map_1->setDataRange(QCPRange(pip1_min,pip1_max));
+    // cplot.color_map->setDataRange(QCPRange(pip0_min,pip0_max));
+    // cplot.color_map_1->setDataRange(QCPRange(pip1_min,pip1_max));
+    cplot.color_map->rescaleDataRange();
+    cplot.color_map_1->rescaleDataRange();
 
     cplot.map_1_rect->axis(QCPAxis::atBottom)->setLabel("Time (s)");
     cplot.map_0_rect->axis(QCPAxis::atLeft)->setLabel("Sweep Index (PIP0)");
@@ -752,6 +819,36 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     this->centralWidget()->update();
     this->centralWidget()->adjustSize();   // recompute sizes
     this->adjustSize();                    // main window adjust
+
+    // connect(cplot.iv_rect->axis, &QCP)
+    connect(cplot.iv_rect->axis(QCPAxis::atBottom),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.iv1_rect->axis(QCPAxis::atBottom), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    // connect(cplot.iv_rect->axis(QCPAxis::atLeft),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+    //         cplot.iv1_rect->axis(QCPAxis::atLeft), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    connect(cplot.iv1_rect->axis(QCPAxis::atBottom),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.iv_rect->axis(QCPAxis::atBottom), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    // connect(cplot.iv1_rect->axis(QCPAxis::atLeft),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+    //         cplot.iv_rect->axis(QCPAxis::atLeft), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    connect(cplot.map_0_rect->axis(QCPAxis::atBottom),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.map_1_rect->axis(QCPAxis::atBottom), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    connect(cplot.map_0_rect->axis(QCPAxis::atLeft),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.map_1_rect->axis(QCPAxis::atLeft), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    connect(cplot.map_1_rect->axis(QCPAxis::atBottom),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.map_0_rect->axis(QCPAxis::atBottom), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+    connect(cplot.map_1_rect->axis(QCPAxis::atLeft),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+            cplot.map_0_rect->axis(QCPAxis::atLeft), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+
+
+
+    // connect(sourceAxis,
+    //         static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
+    //         targetAxis,
+    //         static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
+
+    // connect(sourceAxis->parentPlot(), &QCustomPlot::afterReplot, targetAxis->parentPlot(), [=](){
+    //     targetAxis->parentPlot()->replot();
+    // });
+
     background_plot->replot();
 
 
@@ -915,7 +1012,6 @@ void MainWindow::start_dynamic_chamber(QVBoxLayout* layout){
 
 
 }
-bool first_chamber = true;
 void MainWindow::plot_dynamic_chamber(MyCustomPlot* background_plot){
     int nx = s_data.sweep_ts.size();
     int ny = 28;
@@ -926,9 +1022,6 @@ void MainWindow::plot_dynamic_chamber(MyCustomPlot* background_plot){
     cplot.color_map->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
     cplot.color_map_1->data()->setRange(QCPRange(t0,t1),QCPRange(28,0));
     double x, y, z, z1;
-    if(first_chamber){
-
-    }
     double z_min=0, z_max=0, z_min_1=0, z_max_1=0;
     for (int xIndex=0; xIndex<nx; ++xIndex)
     {
@@ -1609,9 +1702,9 @@ void MainWindow::plot_sweep(QCPAxisRect* axis_rect, char pip_num, bool is_buf){
     axis_rect->axis(QCPAxis::atLeft)->setRange(0, 5.5);
 
     // plot->yAxis->setRange(0,5.5);
-    double visible_seconds = 10;  // seconds of data to show
-    double xmax = x_axis[x_axis.size() - 1];
-    double xmin = xmax - visible_seconds;
+    // double visible_seconds = 10;  // seconds of data to show
+    // double xmax = x_axis[x_axis.size() - 1];
+    // double xmin = xmax - visible_seconds;
     double p0_t0, p0_tf, p1_t0, p1_tf;
     params.p0_t_min > s_data.sweep_ts.first()*t_scale ? p0_t0 = params.p0_t_min : p0_t0 = s_data.sweep_ts.first()*t_scale;
     params.p0_t_max < s_data.sweep_ts.last()*t_scale ? p0_tf = params.p0_t_max : p0_tf = s_data.sweep_ts.last()*t_scale;
@@ -1981,6 +2074,5 @@ void MainWindow::plot_imu(QCPAxisRect* axis_rect, quint8 imu_id, bool is_buf){
     graph_y->addToLegend(legend);
     graph_z->addToLegend(legend);
 
-
-
 }
+

@@ -152,5 +152,12 @@ private:
 
     QList<QCPAxisRect*> rects;
     QList<QCPAxisRect*> rects_b;
+
+    void toggle_flux_voltage(int pip_num, QList<unsigned short>& data);
+    void set_color_data();
+    double p1_gain = 320.0;
+    double p0_gain = 40.0; //mV/nA
+    double v_offset = 1.0;
+    bool is_voltage = true;
 };
 #endif //MAINWINDOW_H
