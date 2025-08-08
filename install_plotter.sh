@@ -14,6 +14,7 @@ if [ ! -d "$dir" ]; then
 else
 	cd "$dir"
 fi
+git fetch > /dev/null 2>&1
 GIT_STATUS=$(git status)
 if [[ $GIT_STATUS == *"up to date"* && "$new_install" = false ]]; then
 	echo "========================================="
