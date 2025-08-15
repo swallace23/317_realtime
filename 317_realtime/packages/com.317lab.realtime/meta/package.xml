@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+	<DisplayName> 317 Realtime </DisplayName>
+	<Description> Data visualization tool for 317 lab PIP data. </Description>
+	<Version> 1.0.0 </Version>
+	<ReleaseDate>2025-08-15</ReleaseDate>
+	<Default>true</Default>
+</Package>
