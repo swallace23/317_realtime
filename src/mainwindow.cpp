@@ -40,48 +40,53 @@ TODO:
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+    start_welcome();
+
+}
+
+void MainWindow::start_welcome(){
     //set up welcome screen
-        QWidget *central = new QWidget(this);
-        setCentralWidget(central);
+    QWidget *central = new QWidget(this);
+    setCentralWidget(central);
 
-        //set background color
-        QPalette pal = central->palette();
-        pal.setColor(QPalette::Window, Qt::blue);
-        central->setAutoFillBackground(true);
-        central->setPalette(pal);
-        QVBoxLayout *layout = new QVBoxLayout(central);
-        central->setLayout(layout);
-        //title
-        QLabel *title = new QLabel("317 Lab Data Parser", central);
-        title->setAlignment(Qt::AlignCenter|Qt::AlignTop);
+    //set background color
+    QPalette pal = central->palette();
+    pal.setColor(QPalette::Window, Qt::blue);
+    central->setAutoFillBackground(true);
+    central->setPalette(pal);
+    QVBoxLayout *layout = new QVBoxLayout(central);
+    central->setLayout(layout);
+    //title
+    QLabel *title = new QLabel("317 Lab Data Parser", central);
+    title->setAlignment(Qt::AlignCenter|Qt::AlignTop);
 
-        layout->addWidget(title);
-        //start button
-        QButtonGroup *select_group = new QButtonGroup();
-        QCheckBox *static_plot = new QCheckBox("Static", central);
-        QCheckBox *dynamic_plot = new QCheckBox("Dynamic", central);
-        static_plot->setCheckable(true);
-        dynamic_plot->setCheckable(true);
-        select_group->addButton(static_plot,0);
-        select_group->addButton(dynamic_plot,1);
-        select_group->setExclusive(true);
+    layout->addWidget(title);
+    //start button
+    QButtonGroup *select_group = new QButtonGroup();
+    QCheckBox *static_plot = new QCheckBox("Static", central);
+    QCheckBox *dynamic_plot = new QCheckBox("Dynamic", central);
+    static_plot->setCheckable(true);
+    dynamic_plot->setCheckable(true);
+    select_group->addButton(static_plot,0);
+    select_group->addButton(dynamic_plot,1);
+    select_group->setExclusive(true);
 
 
-        QPushButton *file_select = new QPushButton("Browse");
-        QHBoxLayout *port_row = new QHBoxLayout;
-        QLabel *port_label = new QLabel("Port:");
-        // QLineEdit *port_entry;
-        // if (settings.contains("port")){
-        //     port_entry = new QLineEdit(settings.value("port").toString());
-        // } else{
-        //     port_entry = new QLineEdit();
-        // }
-        QComboBox *port_entry = new QComboBox;
-        QSerialPortInfo port_info;
-        QList<QSerialPortInfo> ports = port_info.availablePorts();
-        QList<QString> port_names;
-        for(int i=0;i<ports.size();i++){
-            QString name = ports[i].portName();
+    QPushButton *file_select = new QPushButton("Browse");
+    QHBoxLayout *port_row = new QHBoxLayout;
+    QLabel *port_label = new QLabel("Port:");
+    // QLineEdit *port_entry;
+    // if (settings.contains("port")){
+    //     port_entry = new QLineEdit(settings.value("port").toString());
+    // } else{
+    //     port_entry = new QLineEdit();
+    // }
+    QComboBox *port_entry = new QComboBox;
+    QSerialPortInfo port_info;
+    QList<QSerialPortInfo> ports = port_info.availablePorts();
+    QList<QString> port_names;
+    for(int i=0;i<ports.size();i++){
+        QString name = ports[i].portName();
 
 // filter for serial ports
 #ifdef Q_OS_LINUX
@@ -99,255 +104,253 @@ MainWindow::MainWindow(QWidget *parent)
 #endif
     }
 
-        port_entry->insertItems(0,port_names);
+    port_entry->insertItems(0,port_names);
 
-        port_row->addWidget(port_label);
-        port_row->addWidget(port_entry);
+    port_row->addWidget(port_label);
+    port_row->addWidget(port_entry);
 
-        QVBoxLayout *static_box = new QVBoxLayout;
-        QHBoxLayout *static_row = new QHBoxLayout;
-        QLineEdit *file_entry;
-        //check for default file path
-        if(settings.contains("file")){
-            file_entry = new QLineEdit(settings.value("file").toString());
-        } else{
-            file_entry = new QLineEdit();
-        }
-        QCheckBox *flight_button = new QCheckBox("Flight");
-        QCheckBox *chamber_button = new QCheckBox("Chamber");
-        QHBoxLayout *plot_choice_box = new QHBoxLayout;
-        plot_choice_box->addWidget(flight_button);
-        plot_choice_box->addWidget(chamber_button);
-        if(settings.contains("plot_choice")){
+    QVBoxLayout *static_box = new QVBoxLayout;
+    QHBoxLayout *static_row = new QHBoxLayout;
+    QLineEdit *file_entry;
+    //check for default file path
+    if(settings.contains("file")){
+        file_entry = new QLineEdit(settings.value("file").toString());
+    } else{
+        file_entry = new QLineEdit();
+    }
+    QCheckBox *flight_button = new QCheckBox("Flight");
+    QCheckBox *chamber_button = new QCheckBox("Chamber");
+    QHBoxLayout *plot_choice_box = new QHBoxLayout;
+    plot_choice_box->addWidget(flight_button);
+    plot_choice_box->addWidget(chamber_button);
+    if(settings.contains("plot_choice")){
 
-            if(settings.value("plot_choice").toInt()==0){
-                flight_button->click();
-            } else{
-                chamber_button->click();
-            }
-        } else{
+        if(settings.value("plot_choice").toInt()==0){
             flight_button->click();
-        }
-        QHBoxLayout *p0_box = new QHBoxLayout;
-        QVariant p0_min_init, p0_max_init, p1_min_init, p1_max_init;
-        settings.contains("p0_min") ? p0_min_init = settings.value("p0_min") : p0_min_init = 0;
-        settings.contains("p1_min") ? p1_min_init = settings.value("p1_min") : p1_min_init = 0;
-        settings.contains("p0_max") ? p0_max_init = settings.value("p0_max") : p0_max_init = 5;
-        settings.contains("p1_max") ? p1_max_init = settings.value("p1_max") : p1_max_init = 5;
-        QVariant p0_t_min_init, p0_t_max_init, p1_t_min_init, p1_t_max_init;
-        settings.contains("p0_t_min") ? p0_t_min_init = settings.value("p0_t_min") : p0_t_min_init = 0;
-        settings.contains("p1_t_min") ? p1_t_min_init = settings.value("p1_t_min") : p1_t_min_init = 0;
-        settings.contains("p0_t_max") ? p0_t_max_init = settings.value("p0_t_max") : p0_t_max_init = 100000;
-        settings.contains("p1_t_max") ? p1_t_max_init = settings.value("p1_t_max") : p1_t_max_init = 100000;
-
-
-        QLineEdit *p0_min = new QLineEdit(p0_min_init.toString());
-        QLineEdit *p0_max = new QLineEdit(p0_max_init.toString());
-        QLabel *p0_min_label = new QLabel("PIP0 Min (V)");
-        QLabel *p0_max_label = new QLabel("PIP0 Max (V)");
-        p0_box->addWidget(p0_min_label);
-        p0_box->addWidget(p0_min);
-        p0_box->addWidget(p0_max_label);
-        p0_box->addWidget(p0_max);
-        QHBoxLayout *p1_box = new QHBoxLayout;
-        QLineEdit *p1_min = new QLineEdit(p1_min_init.toString());
-        QLineEdit *p1_max = new QLineEdit(p1_max_init.toString());
-        QLabel *p1_min_label = new QLabel("PIP1 Min (V)");
-        QLabel *p1_max_label = new QLabel("PIP1 Max (V)");
-        p1_box->addWidget(p1_min_label);
-        p1_box->addWidget(p1_min);
-        p1_box->addWidget(p1_max_label);
-        p1_box->addWidget(p1_max);
-
-        QHBoxLayout *p0_t_box = new QHBoxLayout;
-        QHBoxLayout *p1_t_box = new QHBoxLayout;
-        QLabel *p0_t_min_label = new QLabel("IV 0 Start: ");
-        QLineEdit *p0_t_min = new QLineEdit(p0_t_min_init.toString());
-        QLabel *p0_t_max_label = new QLabel("IV 0 End: ");
-        QLineEdit *p0_t_max = new QLineEdit(p0_t_max_init.toString());
-        QLabel *p1_t_min_label = new QLabel("IV 1 Start: ");
-        QLineEdit *p1_t_min = new QLineEdit(p1_t_min_init.toString());
-        QLabel *p1_t_max_label = new QLabel("IV 1 End: ");
-        QLineEdit *p1_t_max = new QLineEdit(p1_t_max_init.toString());
-        p0_t_box->addWidget(p0_t_min_label);
-        p0_t_box->addWidget(p0_t_min);
-        p0_t_box->addWidget(p0_t_max_label);
-        p0_t_box->addWidget(p0_t_max);
-        p1_t_box->addWidget(p1_t_min_label);
-        p1_t_box->addWidget(p1_t_min);
-        p1_t_box->addWidget(p1_t_max_label);
-        p1_t_box->addWidget(p1_t_max);
-
-        //disable user range choices for now
-        p0_min->setVisible(false);
-        p1_min->setVisible(false);
-        p0_max->setVisible(false);
-        p1_max->setVisible(false);
-        p0_t_min->setVisible(false);
-        p1_t_min->setVisible(false);
-        p0_t_max->setVisible(false);
-
-        p1_t_max->setVisible(false);
-        p0_min_label->setVisible(false);
-        p0_max_label->setVisible(false);
-        p1_min_label->setVisible(false);
-        p1_max_label->setVisible(false);
-        p0_t_min_label->setVisible(false);
-        p0_t_max_label->setVisible(false);
-        p1_t_min_label->setVisible(false);
-        p1_t_max_label->setVisible(false);
-
-
-
-
-        static_box->addWidget(static_plot);
-        static_row->addWidget(file_entry);
-        static_row->addWidget(file_select);
-        static_box->addLayout(static_row);
-        static_box->addLayout(plot_choice_box);
-        static_box->addLayout(p0_box);
-        static_box->addLayout(p1_box);
-        static_box->addLayout(p0_t_box);
-        static_box->addLayout(p1_t_box);
-        layout->addLayout(static_box);
-        layout->addStretch();
-
-        connect(file_select,&QPushButton::clicked,this,[this,file_entry](){
-            params.filename = QFileDialog::getOpenFileName(nullptr, tr("Open Binary File"), "/home", tr("All Files (*)"));
-            file_entry->setText(params.filename);
-        });
-
-        QButtonGroup *plot_choice_group = new QButtonGroup;
-        plot_choice_group->setExclusive(true);
-        plot_choice_group->addButton(flight_button);
-        plot_choice_group->addButton(chamber_button);
-
-        QVBoxLayout *dynamic_box = new QVBoxLayout;
-        QHBoxLayout *dynamic_plot_choice_box = new QHBoxLayout;
-        QCheckBox *dynamic_flight_button = new QCheckBox("Flight");
-        QCheckBox *dynamic_chamber_button = new QCheckBox("Chamber");
-        dynamic_plot_choice_box->addWidget(dynamic_flight_button);
-        dynamic_plot_choice_box->addWidget(dynamic_chamber_button);
-        if(settings.contains("plot_choice")){
-
-            if(settings.value("plot_choice").toInt()==0){
-                dynamic_flight_button->click();
-            } else{
-                dynamic_chamber_button->click();
-            }
         } else{
+            chamber_button->click();
+        }
+    } else{
+        flight_button->click();
+    }
+    QHBoxLayout *p0_box = new QHBoxLayout;
+    QVariant p0_min_init, p0_max_init, p1_min_init, p1_max_init;
+    settings.contains("p0_min") ? p0_min_init = settings.value("p0_min") : p0_min_init = 0;
+    settings.contains("p1_min") ? p1_min_init = settings.value("p1_min") : p1_min_init = 0;
+    settings.contains("p0_max") ? p0_max_init = settings.value("p0_max") : p0_max_init = 5;
+    settings.contains("p1_max") ? p1_max_init = settings.value("p1_max") : p1_max_init = 5;
+    QVariant p0_t_min_init, p0_t_max_init, p1_t_min_init, p1_t_max_init;
+    settings.contains("p0_t_min") ? p0_t_min_init = settings.value("p0_t_min") : p0_t_min_init = 0;
+    settings.contains("p1_t_min") ? p1_t_min_init = settings.value("p1_t_min") : p1_t_min_init = 0;
+    settings.contains("p0_t_max") ? p0_t_max_init = settings.value("p0_t_max") : p0_t_max_init = 100000;
+    settings.contains("p1_t_max") ? p1_t_max_init = settings.value("p1_t_max") : p1_t_max_init = 100000;
+
+
+    QLineEdit *p0_min = new QLineEdit(p0_min_init.toString());
+    QLineEdit *p0_max = new QLineEdit(p0_max_init.toString());
+    QLabel *p0_min_label = new QLabel("PIP0 Min (V)");
+    QLabel *p0_max_label = new QLabel("PIP0 Max (V)");
+    p0_box->addWidget(p0_min_label);
+    p0_box->addWidget(p0_min);
+    p0_box->addWidget(p0_max_label);
+    p0_box->addWidget(p0_max);
+    QHBoxLayout *p1_box = new QHBoxLayout;
+    QLineEdit *p1_min = new QLineEdit(p1_min_init.toString());
+    QLineEdit *p1_max = new QLineEdit(p1_max_init.toString());
+    QLabel *p1_min_label = new QLabel("PIP1 Min (V)");
+    QLabel *p1_max_label = new QLabel("PIP1 Max (V)");
+    p1_box->addWidget(p1_min_label);
+    p1_box->addWidget(p1_min);
+    p1_box->addWidget(p1_max_label);
+    p1_box->addWidget(p1_max);
+
+    QHBoxLayout *p0_t_box = new QHBoxLayout;
+    QHBoxLayout *p1_t_box = new QHBoxLayout;
+    QLabel *p0_t_min_label = new QLabel("IV 0 Start: ");
+    QLineEdit *p0_t_min = new QLineEdit(p0_t_min_init.toString());
+    QLabel *p0_t_max_label = new QLabel("IV 0 End: ");
+    QLineEdit *p0_t_max = new QLineEdit(p0_t_max_init.toString());
+    QLabel *p1_t_min_label = new QLabel("IV 1 Start: ");
+    QLineEdit *p1_t_min = new QLineEdit(p1_t_min_init.toString());
+    QLabel *p1_t_max_label = new QLabel("IV 1 End: ");
+    QLineEdit *p1_t_max = new QLineEdit(p1_t_max_init.toString());
+    p0_t_box->addWidget(p0_t_min_label);
+    p0_t_box->addWidget(p0_t_min);
+    p0_t_box->addWidget(p0_t_max_label);
+    p0_t_box->addWidget(p0_t_max);
+    p1_t_box->addWidget(p1_t_min_label);
+    p1_t_box->addWidget(p1_t_min);
+    p1_t_box->addWidget(p1_t_max_label);
+    p1_t_box->addWidget(p1_t_max);
+
+    //disable user range choices for now
+    p0_min->setVisible(false);
+    p1_min->setVisible(false);
+    p0_max->setVisible(false);
+    p1_max->setVisible(false);
+    p0_t_min->setVisible(false);
+    p1_t_min->setVisible(false);
+    p0_t_max->setVisible(false);
+
+    p1_t_max->setVisible(false);
+    p0_min_label->setVisible(false);
+    p0_max_label->setVisible(false);
+    p1_min_label->setVisible(false);
+    p1_max_label->setVisible(false);
+    p0_t_min_label->setVisible(false);
+    p0_t_max_label->setVisible(false);
+    p1_t_min_label->setVisible(false);
+    p1_t_max_label->setVisible(false);
+
+
+
+
+    static_box->addWidget(static_plot);
+    static_row->addWidget(file_entry);
+    static_row->addWidget(file_select);
+    static_box->addLayout(static_row);
+    static_box->addLayout(plot_choice_box);
+    static_box->addLayout(p0_box);
+    static_box->addLayout(p1_box);
+    static_box->addLayout(p0_t_box);
+    static_box->addLayout(p1_t_box);
+    layout->addLayout(static_box);
+    layout->addStretch();
+
+    connect(file_select,&QPushButton::clicked,this,[this,file_entry](){
+        params.filename = QFileDialog::getOpenFileName(nullptr, tr("Open Binary File"), "/home", tr("All Files (*)"));
+        file_entry->setText(params.filename);
+    });
+
+    QButtonGroup *plot_choice_group = new QButtonGroup;
+    plot_choice_group->setExclusive(true);
+    plot_choice_group->addButton(flight_button);
+    plot_choice_group->addButton(chamber_button);
+
+    QVBoxLayout *dynamic_box = new QVBoxLayout;
+    QHBoxLayout *dynamic_plot_choice_box = new QHBoxLayout;
+    QCheckBox *dynamic_flight_button = new QCheckBox("Flight");
+    QCheckBox *dynamic_chamber_button = new QCheckBox("Chamber");
+    dynamic_plot_choice_box->addWidget(dynamic_flight_button);
+    dynamic_plot_choice_box->addWidget(dynamic_chamber_button);
+    if(settings.contains("plot_choice")){
+
+        if(settings.value("plot_choice").toInt()==0){
             dynamic_flight_button->click();
-        }
-        QButtonGroup *plot_choice_group_dynamic = new QButtonGroup;
-        plot_choice_group_dynamic->setExclusive(true);
-        plot_choice_group_dynamic->addButton(dynamic_flight_button);
-        plot_choice_group_dynamic->addButton(dynamic_chamber_button);
-
-        dynamic_box->addWidget(dynamic_plot);
-        dynamic_box->addLayout(dynamic_plot_choice_box);
-
-        dynamic_box->addLayout(port_row);
-        QHBoxLayout *baud_box = new QHBoxLayout;
-        QLabel *baud_label = new QLabel("Baud: ");
-
-        QLineEdit *baud_entry;
-        if (settings.contains("baud")){
-            baud_entry = new QLineEdit(settings.value("baud").toString());
         } else{
-            baud_entry = new QLineEdit();
+            dynamic_chamber_button->click();
         }
-        WelcomeEntries entries(file_entry, port_entry, baud_entry);
-        // WelcomeEntries entries(file_entry, port_entry, nullptr);
-        connect(select_group, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),this,[=]{onSelect(select_group,file_select,entries);});
+    } else{
+        dynamic_flight_button->click();
+    }
+    QButtonGroup *plot_choice_group_dynamic = new QButtonGroup;
+    plot_choice_group_dynamic->setExclusive(true);
+    plot_choice_group_dynamic->addButton(dynamic_flight_button);
+    plot_choice_group_dynamic->addButton(dynamic_chamber_button);
 
-        // dynamic_box->addWidget(baud_entry);
-        baud_box->addWidget(baud_label);
-        baud_box->addWidget(baud_entry);
-        dynamic_box->addLayout(baud_box);
-        layout->addLayout(dynamic_box);
+    dynamic_box->addWidget(dynamic_plot);
+    dynamic_box->addLayout(dynamic_plot_choice_box);
 
+    dynamic_box->addLayout(port_row);
+    QHBoxLayout *baud_box = new QHBoxLayout;
+    QLabel *baud_label = new QLabel("Baud: ");
 
-        layout->addStretch();
+    QLineEdit *baud_entry;
+    if (settings.contains("baud")){
+        baud_entry = new QLineEdit(settings.value("baud").toString());
+    } else{
+        baud_entry = new QLineEdit();
+    }
+    WelcomeEntries entries(file_entry, port_entry, baud_entry);
+    // WelcomeEntries entries(file_entry, port_entry, nullptr);
+    connect(select_group, QOverload<QAbstractButton *>::of(&QButtonGroup::buttonClicked),this,[=]{onSelect(select_group,file_select,entries);});
 
-        QHBoxLayout *start_box = new QHBoxLayout;
-        QPushButton *start_button = new QPushButton("Start", central);
-        start_box->addWidget(start_button);
-        QLabel *save_label = new QLabel("Save configuration?");
-        start_box->addWidget(save_label);
-        QCheckBox *save_choices = new QCheckBox();
-        start_box->addWidget(save_choices);
-
-        connect(start_button, &QPushButton::clicked,this,[=](){
-            params.filename=file_entry->text();
-            params.baud=baud_entry->text().toInt();
-            params.port=port_entry->currentText();
-            params.save=save_choices->isChecked();
-            int checked = select_group->checkedId();
-            params.p0_min = static_cast<float>(p0_min->text().toFloat());
-            params.p1_min = static_cast<float>(p1_min->text().toFloat());
-            params.p0_max = static_cast<float>(p0_max->text().toFloat());
-            params.p1_max = static_cast<float>(p1_max->text().toFloat());
-            params.p0_t_min = static_cast<float>(p0_t_min->text().toFloat());
-            params.p1_t_min = static_cast<float>(p1_t_min->text().toFloat());
-            params.p0_t_max = static_cast<float>(p0_t_max->text().toFloat());
-            params.p1_t_max = static_cast<float>(p1_t_max->text().toFloat());
+    // dynamic_box->addWidget(baud_entry);
+    baud_box->addWidget(baud_label);
+    baud_box->addWidget(baud_entry);
+    dynamic_box->addLayout(baud_box);
+    layout->addLayout(dynamic_box);
 
 
-            if(checked==0){
-                params.is_static=true;
-            } else if (checked==1){
-                params.is_static=false;
-            }
-            if(static_plot->isChecked()){
-                if(flight_button->isChecked()){
-                    params.plot_choice=0;
-                } else{
-                    params.plot_choice=1;
-                }
+    layout->addStretch();
+
+    QHBoxLayout *start_box = new QHBoxLayout;
+    QPushButton *start_button = new QPushButton("Start", central);
+    start_box->addWidget(start_button);
+    QLabel *save_label = new QLabel("Save configuration?");
+    start_box->addWidget(save_label);
+    QCheckBox *save_choices = new QCheckBox();
+    start_box->addWidget(save_choices);
+
+    connect(start_button, &QPushButton::clicked,this,[=](){
+        params.filename=file_entry->text();
+        params.baud=baud_entry->text().toInt();
+        params.port=port_entry->currentText();
+        params.save=save_choices->isChecked();
+        int checked = select_group->checkedId();
+        params.p0_min = static_cast<float>(p0_min->text().toFloat());
+        params.p1_min = static_cast<float>(p1_min->text().toFloat());
+        params.p0_max = static_cast<float>(p0_max->text().toFloat());
+        params.p1_max = static_cast<float>(p1_max->text().toFloat());
+        params.p0_t_min = static_cast<float>(p0_t_min->text().toFloat());
+        params.p1_t_min = static_cast<float>(p1_t_min->text().toFloat());
+        params.p0_t_max = static_cast<float>(p0_t_max->text().toFloat());
+        params.p1_t_max = static_cast<float>(p1_t_max->text().toFloat());
+
+
+        if(checked==0){
+            params.is_static=true;
+        } else if (checked==1){
+            params.is_static=false;
+        }
+        if(static_plot->isChecked()){
+            if(flight_button->isChecked()){
+                params.plot_choice=0;
             } else{
-                if(dynamic_flight_button->isChecked()){
-                    params.plot_choice=0;
-                } else{
-                    params.plot_choice=1;
-                }
-
-            }
-            // if(flight_button->isChecked() || dynamic_flight_button->isChecked()){
-            //     params.plot_choice=0;
-            // } else{
-            //     params.plot_choice=1;
-            // }
-            if(params.save){
-                save_settings();
-            }
-            startPlots(central, layout);
-        });
-
-        QPushButton *settings_button = new QPushButton("Settings");
-        connect(settings_button, &QPushButton::clicked,this, [=](){
-            SettingsWindow *settings_window = new SettingsWindow(nullptr, &settings);
-            settings_window->setAttribute(Qt::WA_DeleteOnClose);
-            settings_window->show();
-        });
-        start_box->addWidget(settings_button);
-
-        layout->addLayout(start_box);
-
-
-        if (settings.contains("static")){
-            if(settings.value("static").toBool()){
-                static_plot->click();
-            }
-            else{
-                dynamic_plot->click();
+                params.plot_choice=1;
             }
         } else{
+            if(dynamic_flight_button->isChecked()){
+                params.plot_choice=0;
+            } else{
+                params.plot_choice=1;
+            }
+
+        }
+        // if(flight_button->isChecked() || dynamic_flight_button->isChecked()){
+        //     params.plot_choice=0;
+        // } else{
+        //     params.plot_choice=1;
+        // }
+        if(params.save){
+            save_settings();
+        }
+        startPlots(central, layout);
+    });
+
+    QPushButton *settings_button = new QPushButton("Settings");
+    connect(settings_button, &QPushButton::clicked,this, [=](){
+        SettingsWindow *settings_window = new SettingsWindow(nullptr, &settings);
+        settings_window->setAttribute(Qt::WA_DeleteOnClose);
+        settings_window->show();
+    });
+    start_box->addWidget(settings_button);
+
+    layout->addLayout(start_box);
+
+
+    if (settings.contains("static")){
+        if(settings.value("static").toBool()){
             static_plot->click();
         }
-
+        else{
+            dynamic_plot->click();
+        }
+    } else{
+        static_plot->click();
+    }
 
 }
-
 MainWindow::~MainWindow() {}
 
 void MainWindow::onSelect(QButtonGroup *group, QPushButton *file_select, WelcomeEntries entries){
@@ -417,6 +420,22 @@ void MainWindow::save_settings(){
 
 
 }
+void MainWindow::returnToWelcome(QWidget *){
+    this->resize(800,600);
+    QWidget *oldCentral = centralWidget();
+    if (oldCentral) {
+        oldCentral->deleteLater(); // safely delete
+    }
+
+    // Create new central widget for plots screen
+    QWidget *central = new QWidget(this);
+    setCentralWidget(central);
+
+
+    QVBoxLayout *layout = new QVBoxLayout(central);
+    central->setLayout(layout);
+    start_welcome();
+}
 void MainWindow::startPlots(QWidget *, QVBoxLayout *){
     this->resize(1400,1000);
     QWidget *oldCentral = centralWidget();
@@ -465,6 +484,7 @@ void MainWindow::startPlots(QWidget *, QVBoxLayout *){
         }
     }
 }
+
 
 void MainWindow::toggle_imu_graphs(int idx){
     bool is_visible = imu_graphs[idx]->visible();
@@ -546,6 +566,10 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     header->addWidget(title);
 
     QHBoxLayout *lock_box = new QHBoxLayout;
+    QPushButton *back_button = new QPushButton("Back to Menu");
+    connect(back_button,&QPushButton::clicked, this,[=](){
+        returnToWelcome(centralWidget());
+    });
     QCheckBox *lock_axes = new QCheckBox();
     lock_axes->setStyleSheet("QCheckBox{background-color : cyan;}");
     QLabel *lock_axes_label = new QLabel("Lock axes?");
@@ -622,6 +646,7 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
 
 
     });
+    header->addWidget(back_button);
     header->addWidget(reset);
     header->addWidget(zoom);
     header->addWidget(toggle_data);
@@ -1263,6 +1288,10 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     QWidget *header_container = new QWidget;
     header_container->setLayout(header);
     header_container->setStyleSheet("background-color:black;");
+    QPushButton *back_button = new QPushButton("Back to Menu");
+    connect(back_button,&QPushButton::clicked, this,[=](){
+        returnToWelcome(centralWidget());
+    });
     QHBoxLayout *lock_box = new QHBoxLayout;
     QCheckBox *lock_axes = new QCheckBox();
     lock_axes->setStyleSheet("QCheckBox{background-color : cyan;}");
@@ -1304,6 +1333,7 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     connect(zoom, &QPushButton::clicked, this, [=](){
         toggle_zoom(zoom);
     });
+    header->addWidget(back_button);
     header->addWidget(reset);
     header->addWidget(zoom);
     header->addStretch();

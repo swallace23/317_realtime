@@ -88,9 +88,11 @@ public:
     ~MainWindow();
 private slots:
     void startPlots(QWidget *central, QVBoxLayout *layout);
+    void returnToWelcome(QWidget *central);
     void onSelect(QButtonGroup *group, QPushButton *file_select, WelcomeEntries entries);
     void toggle_zoom(QAbstractButton *check);
 private:
+    void start_welcome();
     void plot_sweep(QCPAxisRect* axis_rect, char pip_num, bool is_buf = false);
     void plot_imu(QCPAxisRect* axis_rect, quint8 imu_id, bool is_buf = false);
     void plot_imu_mag(QCPAxisRect* axis_rect);

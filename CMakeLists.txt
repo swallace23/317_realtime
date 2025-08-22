@@ -11,17 +11,17 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets StateMachine PrintSupport SerialPort)
 
 set(PROJECT_SOURCES
-    main.cpp
-    mainwindow.cpp
-    mainwindow.h
-    qcustomplot.cpp
-    qcustomplot.h
-    settingswindow.cpp
-    settingswindow.h
-    plotwindow.cpp
-    plotwindow.h
-    mycustomplot.h
-    resources.qrc
+    src/main.cpp
+    src/mainwindow.cpp
+    src/mainwindow.h
+    src/qcustomplot.cpp
+    src/qcustomplot.h
+    src/settingswindow.cpp
+    src/settingswindow.h
+    src/plotwindow.cpp
+    src/plotwindow.h
+    src/mycustomplot.h
+    resources/resources.qrc
 )
 
 if(QT_VERSION_MAJOR GREATER_EQUAL 6)
