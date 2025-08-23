@@ -51,7 +51,7 @@ void MainWindow::start_welcome(){
 
     //set background color
     QPalette pal = central->palette();
-    pal.setColor(QPalette::Window, Qt::blue);
+    pal.setColor(QPalette::Window, Qt::black);
     central->setAutoFillBackground(true);
     central->setPalette(pal);
     QVBoxLayout *layout = new QVBoxLayout(central);
@@ -615,16 +615,17 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     QHBoxLayout *header = new QHBoxLayout;
     QWidget *header_container = new QWidget;
     header_container->setLayout(header);
-    header_container->setStyleSheet("background-color:black;");
+    header_container->setStyleSheet("background-color:white;");
     QString page_title = "Shield ";
     page_title.append(QString::number(s_data.shield_id));
     QLabel *title = new QLabel(page_title);
-    title->setStyleSheet("QLabel{background-color:black;color:white;font:30pt;}");
+    title->setStyleSheet("QLabel{background-color:white;color:black;font:30pt;}");
     title->setAlignment(Qt::AlignCenter);
 
     QString file_string = "Filename: ";
     file_string.append(params.filename);
     QLabel *file_label = new QLabel(file_string);
+    file_label->setStyleSheet("QLabel{color:black;}");
     QVBoxLayout *title_box = new QVBoxLayout;
     title_box->addWidget(title);
     title_box->addWidget(file_label);
@@ -638,9 +639,11 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     connect(back_button,&QPushButton::clicked, this,[=](){
         returnToWelcome(centralWidget());
     });
+    back_button->setStyleSheet("QPushButton {color : black;}");
     QCheckBox *lock_axes = new QCheckBox();
-    lock_axes->setStyleSheet("QCheckBox{background-color : cyan;}");
+    lock_axes->setStyleSheet("QCheckBox{background-color : black;}");
     QLabel *lock_axes_label = new QLabel("Lock axes?");
+    lock_axes_label->setStyleSheet("QLabel {color : black;}");
 
     QPushButton *reset = new QPushButton();
     connect(reset, &QPushButton::clicked, this, [=]() {
@@ -693,6 +696,7 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
 
 
     QPushButton *toggle_data = new QPushButton("Toggle Data Type");
+    toggle_data->setStyleSheet("QPushButton {color:black;}");
     connect(toggle_data, &QPushButton::clicked, this, [=](){
         cplot.color_map->setColorScale(color_scale);
         cplot.color_map_1->setColorScale(color_scale_1);
@@ -1357,24 +1361,26 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     QHBoxLayout *header = new QHBoxLayout;
     QWidget *header_container = new QWidget;
     header_container->setLayout(header);
-    header_container->setStyleSheet("background-color:black;");
+    header_container->setStyleSheet("background-color:white;");
     QPushButton *back_button = new QPushButton("Back to Menu");
     connect(back_button,&QPushButton::clicked, this,[=](){
         returnToWelcome(centralWidget());
     });
+    back_button->setStyleSheet("QPushButton {color : black;}");
     QHBoxLayout *lock_box = new QHBoxLayout;
     QCheckBox *lock_axes = new QCheckBox();
     lock_axes->setStyleSheet("QCheckBox{background-color : cyan;}");
     QLabel *lock_axes_label = new QLabel("Lock axes?");
     QString page_title = "Shield ";
-    lock_axes_label->setStyleSheet("QLabel{color:white;}");
+    lock_axes_label->setStyleSheet("QLabel{color:black;}");
     page_title.append(QString::number(s_data.shield_id));
     QLabel *title = new QLabel(page_title);
-    title->setStyleSheet("QLabel{background-color:black;color:white;font:40pt;}");
+    title->setStyleSheet("QLabel{background-color:white;color:black;font:40pt;}");
     title->setAlignment(Qt::AlignCenter);
     QString file_string = "Filename: ";
     file_string.append(params.filename);
     QLabel *file_label = new QLabel(file_string);
+    file_label->setStyleSheet("QLabel{color:black;}");
     QVBoxLayout *title_box = new QVBoxLayout;
     title_box->addWidget(title);
     title_box->addWidget(file_label);
