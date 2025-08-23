@@ -51,6 +51,7 @@ void MainWindow::start_welcome(){
 
     //set background color
     QPalette pal = central->palette();
+    pal.setColor(QPalette::WindowText, Qt::white);
     pal.setColor(QPalette::Window, Qt::black);
     central->setAutoFillBackground(true);
     central->setPalette(pal);
