@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Installer>
-	<Name>317Realtime</Name>
-	<Version>1.0.0</Version>
-	<Title>317 Realtime Installer</Title>
-	<Publisher> 317 Lab </Publisher>
-	<StartMenuDir>317_realtime</StartMenuDir>
-	<TargetDir>@HomeDir@/317_realtime</TargetDir>
-</Installer>
