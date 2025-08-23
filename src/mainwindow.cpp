@@ -51,8 +51,8 @@ void MainWindow::start_welcome(){
 
     //set background color
     QPalette pal = central->palette();
-    pal.setColor(QPalette::WindowText, Qt::white);
-    pal.setColor(QPalette::Window, Qt::black);
+    pal.setColor(QPalette::WindowText, Qt::black);
+    pal.setColor(QPalette::Window, Qt::white);
     central->setAutoFillBackground(true);
     central->setPalette(pal);
     QVBoxLayout *layout = new QVBoxLayout(central);
