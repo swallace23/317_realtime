@@ -91,6 +91,7 @@ private slots:
     void returnToWelcome(QWidget *central);
     void onSelect(QButtonGroup *group, QPushButton *file_select, WelcomeEntries entries);
     void toggle_zoom(QAbstractButton *check);
+    void onPlotClicked(QMouseEvent *event,MyCustomPlot *customPlot);
 private:
     void start_welcome();
     void plot_sweep(QCPAxisRect* axis_rect, char pip_num, bool is_buf = false);
@@ -118,6 +119,10 @@ private:
     quint8 sweep_len = 28;
     quint8 imu_len = 10;
     quint16 num_msgs = buffer_size/message_size+1;
+
+    QList<QCPItemTracer*> tracers;   // keep tracers alive
+    QList<QCPItemText*> labels;      // optional labels
+
 
     void parse(bool is_static);
     void save_settings();

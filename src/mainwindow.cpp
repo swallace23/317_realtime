@@ -537,6 +537,64 @@ void MainWindow::toggle_flux_voltage(int pip_num, QList<unsigned short>& data){
     }
 }
 
+void MainWindow::onPlotClicked(QMouseEvent *event, MyCustomPlot *customPlot)
+{
+    double xClick = customPlot->xAxis->pixelToCoord(event->pos().x());
+    double yClick = customPlot->yAxis->pixelToCoord(event->pos().y());
+    // qDebug() << xClick << " " << yClick;
+    QCPGraph *graph = customPlot->graph(0);
+    auto data = graph->data()->constBegin();
+    qDebug() << "x val: " << xClick-data->key << " y val: " << yClick-data->value;
+    // double nearestX = 0, nearestY = 0;
+    // QCPGraph *nearestGraph = nullptr;
+    // double minDist = std::numeric_limits<double>::max();
+
+    // // Search nearest point across all graphs
+    // for (int i = 0; i < customPlot->graphCount(); ++i) {
+    //     QCPGraph *graph = customPlot->graph(i);
+    //     auto data = graph->data()->constBegin();
+
+    //     while (data != graph->data()->constEnd()) {
+    //         double dx = xClick - data->key;
+    //         double dy = yClick - data->value;
+    //         double dist = dx*dx + dy*dy;
+    //         if (dist < minDist) {
+    //             minDist = dist;
+    //             nearestX = data->key;
+    //             nearestY = data->value;
+    //             nearestGraph = graph;
+    //         }
+    //         ++data;
+    //     }
+    // }
+
+    // if (nearestGraph) {
+    //     qDebug() << "Nearest point:" << nearestX << nearestY;
+
+    //     // Tracer
+    //     QCPItemTracer *tracer = new QCPItemTracer(customPlot);
+    //     tracers.append(tracer);  // keep alive
+    //     tracer->setGraph(nearestGraph);
+    //     tracer->setGraphKey(nearestX);
+    //     tracer->setInterpolating(false);
+    //     tracer->setStyle(QCPItemTracer::tsCircle);
+    //     tracer->setPen(QPen(Qt::black));
+    //     tracer->setBrush(Qt::yellow);
+    //     tracer->setSize(8);
+    //     tracer->updatePosition();
+
+    //     // Optional label
+    //     QCPItemText *label = new QCPItemText(customPlot);
+    //     labels.append(label);
+    //     label->position->setCoords(nearestX, nearestY);
+    //     label->setText(QString("(%1, %2)").arg(nearestX).arg(nearestY));
+    //     label->setFont(QFont(font().family(), 10));
+    //     label->setPositionAlignment(Qt::AlignTop|Qt::AlignLeft);
+    //     label->setPen(QPen(Qt::black));
+
+    //     customPlot->replot();
+    // }
+}
 
 void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     // ensure central widget exists
@@ -563,7 +621,17 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     QLabel *title = new QLabel(page_title);
     title->setStyleSheet("QLabel{background-color:black;color:white;font:30pt;}");
     title->setAlignment(Qt::AlignCenter);
-    header->addWidget(title);
+
+    QString file_string = "Filename: ";
+    file_string.append(params.filename);
+    QLabel *file_label = new QLabel(file_string);
+    QVBoxLayout *title_box = new QVBoxLayout;
+    title_box->addWidget(title);
+    title_box->addWidget(file_label);
+    QWidget *title_widget = new QWidget;
+    title_widget->setLayout(title_box);
+
+    // header->addWidget(title); (not sure why this was here?)
 
     QHBoxLayout *lock_box = new QHBoxLayout;
     QPushButton *back_button = new QPushButton("Back to Menu");
@@ -651,7 +719,7 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     header->addWidget(zoom);
     header->addWidget(toggle_data);
     header->addStretch();
-    header->addWidget(title);
+    header->addWidget(title_widget);
     header->addStretch();
     lock_box->addWidget(lock_axes_label);
     lock_box->addWidget(lock_axes);
@@ -863,7 +931,9 @@ void MainWindow::plot_static_chamber(QVBoxLayout* layout){
     connect(cplot.map_1_rect->axis(QCPAxis::atLeft),static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
             cplot.map_0_rect->axis(QCPAxis::atLeft), static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::setRange));
 
-
+    connect(background_plot,&QCustomPlot::mousePress, this, [=](QMouseEvent *event){
+        onPlotClicked(event, background_plot);
+    });
 
     // connect(sourceAxis,
     //         static_cast<void (QCPAxis::*)(const QCPRange &)>(&QCPAxis::rangeChanged),
@@ -1302,6 +1372,14 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     QLabel *title = new QLabel(page_title);
     title->setStyleSheet("QLabel{background-color:black;color:white;font:40pt;}");
     title->setAlignment(Qt::AlignCenter);
+    QString file_string = "Filename: ";
+    file_string.append(params.filename);
+    QLabel *file_label = new QLabel(file_string);
+    QVBoxLayout *title_box = new QVBoxLayout;
+    title_box->addWidget(title);
+    title_box->addWidget(file_label);
+    QWidget *title_widget = new QWidget;
+    title_widget->setLayout(title_box);
 
     QPushButton *reset = new QPushButton();
     connect(reset, &QPushButton::clicked, this, [=]() {
@@ -1337,7 +1415,7 @@ void MainWindow::plot_static(QVBoxLayout* layout){
     header->addWidget(reset);
     header->addWidget(zoom);
     header->addStretch();
-    header->addWidget(title);
+    header->addWidget(title_widget);
     header->addStretch();
     lock_box->addWidget(lock_axes_label);
     lock_box->addWidget(lock_axes);
